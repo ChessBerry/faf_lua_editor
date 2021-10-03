@@ -4,20 +4,27 @@ from luaparser.astnodes import Call, Invoke, LocalAssign, Name, Comment, Index
 import os
 from typing import Deque, List
 import json
+import importlib_resources
 
 class FAFLuaEditor():
-    def __init__(self, moho_sim_reference_json_path: str) -> None:
+    def __init__(self) -> None:
         self._up_method_to_moho_method = {}
         self._up_func_to_up_method_call = {}
         self._up_func_to_up_method = {}
         self._func_to_up_func = {}
+
+        self._moho_sim_reference_json_path = 'moho_reference/moho_sim_reference_removed_unsafe.json'
         
         self._duplicate_func_names = set()
 
-        self.setup_moho_functions(moho_sim_reference_json_path)
+        self.setup_moho_functions()
 
-    def setup_moho_functions(self, moho_sim_reference_json_path: str):
-        with open(moho_sim_reference_json_path, "r") as file:
+    def setup_moho_functions(self):
+        ref = importlib_resources.files("faf_lua_editor").joinpath(self._moho_sim_reference_json_path)
+        # pd.read_csv(stream, encoding='latin-1')
+        # json.load(stream)
+
+        with ref.open("rb") as file:
             moho_references = json.load(file)
             for moho_file, moho_funcs in moho_references.items():
 
@@ -57,7 +64,7 @@ class FAFLuaEditor():
 
                     # print(' ' * len(method), up_func, self._up_func_to_up_method[up_func])
                     # print(' ' * len(method), func, self._func_to_up_func[func])
-            print("Found the following duplicate moho functions in %s"%moho_sim_reference_json_path)
+            print("Found the following duplicate moho functions in %s"%self._moho_sim_reference_json_path)
             print("They are therefore skipped and won't be upvalued/optimized:")
             print(self._duplicate_func_names, "\n")
 
@@ -135,12 +142,18 @@ class FAFLuaEditor():
                 n += 1
         upvalue_comment = upvalue_comment_gen()
         upvalues = []
-        for up_method in list(up_methods_found):
+        # Turn the sets into lists and sort them so that order of upvalued functions and hence the AST is always 
+        # reproducible
+        up_methods_found = list(up_methods_found)
+        up_methods_found.sort()
+        up_funcs_found = list(up_funcs_found)
+        up_funcs_found.sort()
+        for up_method in up_methods_found:
             upvalues.append(LocalAssign(
                 [Name(up_method)], 
                 [Name(self._up_method_to_moho_method[up_method])],
                 [Comment(next(upvalue_comment))]))
-            for up_func in list(up_funcs_found):
+            for up_func in up_funcs_found:
                 if up_method in self._up_func_to_up_method[up_func]:
                     upvalues.append(LocalAssign(
                         [Name(up_func)], 
@@ -148,13 +161,14 @@ class FAFLuaEditor():
                         ))   
         if upvalues:
             first_block = chunk.body.body
-            first_block[0].comments[0:0] = [Comment('-- End of automatically upvalued moho functions --'), 
+            first_block[0].comments[0:0] = [Comment('-- End of automatically upvalued moho functions'), 
                                             Comment('')]
             first_block[0:0] = upvalues
         
         return ast.to_lua_source(chunk)
 
     def reformat_file(self, filepath: str):
+        """ Transform the file into an AST and then generate lua code from it"""
         # print("Opening %s"%filepath)
         with open(filepath, 'r+') as file:
             content = file.read()
@@ -183,50 +197,3 @@ class FAFLuaEditor():
                 file.write(new_content)
                 file.truncate()
         return filepath
-
-if __name__ == "__main__":
-    # # rootdirs = ["../FAForever_GitHub/units"]
-    # # rootdirs = ["../FAForever_GitHub/projectiles"]
-    # rootdirs = ["../FAForever_GitHub/units", "../FAForever_GitHub/projectiles"]
-    # filepaths = []
-    # for rootdir in rootdirs:
-    #     for subdir, dirs, files in os.walk(rootdir):
-    #         # print(files)
-    #         for file in files:
-    #             if file.endswith(".lua"):
-    #                 file_path = os.path.join(subdir, file)
-    #                 filepaths.append(file_path)
-    #                 # print(file_path)
-
-    # filepaths = ["../FAForever_GitHub/units/DRA0202/DRA0202_Script.lua"]
-    # filepaths = ["../FAForever_GitHub/units/UAB1104/UAB1104_Script.lua"]
-    # filepaths = ["faf_lua_for_testing.lua"]
-    filepaths = ["lua_for_testing.lua"]
-
-    editor = FAFLuaEditor(moho_sim_reference_json_path = "moho_sim_reference_removed_unsafe.json")
-
-    failed_files = []
-    for file_path in filepaths:
-        try:
-            print("\nOpening ", file_path)
-            editor.reformat_file(file_path)
-            # editor.upvalue_moho_functions_in_file(file_path)
-            # print(file_path)
-        except:
-            failed_files.append(file_path)
-            print("FAILED editing/upvaluing ", file_path)
-
-    if failed_files:
-        print("\nfailed and hence skipped files:\n", failed_files)
-    else:
-        print("Editing/Optimizing worked for ALL files!")
-    # print("it worked!")
-
-# ---------
-# Notes for the moho_sim_reference changes:
-# 
-# Removed all the User and Core functions as we probably don't want to touch them anyway
-# 
-# Removed all the "base" functions and all the functions with "_c_" in the name (only "_c_CreateEntity" 
-# and "_c_CreateShield") as touching either of them can hard crash the game for some reason
-# 

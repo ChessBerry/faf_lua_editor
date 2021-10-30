@@ -73,6 +73,31 @@ class FAFLuaEditor():
             # print(ast.to_pretty_str(chunk))
             return ast.to_lua_source(chunk)
 
+    def create_new_statement_for_invoke_upvalue(self, statement, up_funcs: List, new_statements:List):
+        up_func = self._func_to_up_func[statement.func.id]
+        up_funcs.append(up_func)
+
+        # go through all the method calls that came before the final function call so that we can add them 
+        # as the explicit first argument of the function, which is what the colon invoke does implicitly
+        explicit_invoke_first_arg = ''
+        current_method = statement.source
+        if isinstance(current_method, Invoke) and statement.func.id in self._func_to_up_func:
+            # current_method = current_method.source
+            explicit_invoke_first_arg = self.create_new_statement_for_invoke_upvalue(current_method, up_funcs, new_statements)
+            new_statements.append(Call(Name(up_func), [Name(explicit_invoke_first_arg)] + statement.args, statement.comments))
+        else:
+            while True:
+                try: 
+                    explicit_invoke_first_arg = '.'.join(filter(None,[current_method.idx.id, explicit_invoke_first_arg]))
+                    current_method = current_method.value
+                except AttributeError:
+                    explicit_invoke_first_arg = '.'.join(filter(None,[current_method.id, explicit_invoke_first_arg]))
+                    # current_method = statement_value.value
+                    break
+            new_statements.append(Call(Name(up_func), [Name(explicit_invoke_first_arg)] + statement.args, statement.comments))
+        
+        return explicit_invoke_first_arg
+
     def _upvalue_moho_functions(self, content: str) -> str:
         chunk = ast.parse(content)
         # print(ast.to_pretty_str(chunk))
@@ -86,31 +111,32 @@ class FAFLuaEditor():
                 # print("block found")
                 blocks.append(node.body)
 
+
         for j in range(len(blocks)):
             block = blocks[j]
             for i in range(len(block)):
                 statement = block[i]
                 
-                up_func = None
-                if isinstance(statement, Invoke) and \
-                        statement.func.id in self._func_to_up_func:
-                    # Function calls with a colon are invokes in the parser, e.g. thingy:function(args)
-                    up_func = self._func_to_up_func[statement.func.id]
+                up_funcs = []
+                # up_methods = []
+                new_statements = []
 
-                    # go through all the method calls that came before the final function call so that we can add them 
-                    # as the explicit first argument of the function, which is what the colon invoke does implicitly
-                    explicit_invoke_arg = ''
-                    current_method = statement.source
-                    while True:
-                        try: 
-                            explicit_invoke_arg = '.'.join(filter(None,[current_method.idx.id, explicit_invoke_arg]))
-                            current_method = current_method.value
-                        except AttributeError:
-                            explicit_invoke_arg = '.'.join(filter(None,[current_method.id, explicit_invoke_arg]))
-                            # current_method = statement_value.value
-                            break
-                    # The "[Name('self')]" part in the next line is a HAAAACK
-                    new_statement = Call(Name(up_func), [Name(explicit_invoke_arg)] + statement.args, statement.comments)
+                # Note that functions are cycled through right to left
+                if isinstance(statement, Invoke) and statement.func.id in self._func_to_up_func:
+                    # Function calls with a colon are invokes in the parser, e.g. thingy:function(args)
+
+                    self.create_new_statement_for_invoke_upvalue(statement, up_funcs, new_statements)
+                    
+                    if up_funcs:
+                        up_funcs_found.update(up_funcs)
+                        up_methods = []
+                        for func in up_funcs:
+                            up_methods.append(self._up_func_to_up_method[func])
+                        up_methods_found.update(up_methods)
+                        block[i] = new_statements[0]
+                        for stat in reversed(new_statements[1:]):
+                            block.insert(i+1, stat)
+            
                 
                 elif isinstance(statement, Call):
                     try: 
@@ -123,15 +149,14 @@ class FAFLuaEditor():
                         up_func = self._func_to_up_func[func]
                         new_statement = Call(Name(up_func), statement.args, statement.comments)
 
-                if up_func is not None:
-                    up_funcs_found.add(up_func)
-                    up_method = self._up_func_to_up_method[up_func]
-                    up_methods_found.add(up_method)
-                    block[i] = new_statement
+                        up_funcs_found.add(up_func)
+                        up_method = self._up_func_to_up_method[up_func]
+                        up_methods_found.add(up_method)
+                        block[i] = new_statement
             
         # put upvalues at beginning of chunk
         def upvalue_comment_gen():
-            # this is makes it so the first upvalue method has a comment, while all the other ones are separated 
+            # this makes it so the first upvalue method has a comment, while all the other ones are separated 
             # by whitespace. A generator is overkill for that, but more fun than if statements :P
             n = 0 
             while True:
@@ -142,6 +167,7 @@ class FAFLuaEditor():
                 n += 1
         upvalue_comment = upvalue_comment_gen()
         upvalues = []
+
         # Turn the sets into lists and sort them so that order of upvalued functions and hence the AST is always 
         # reproducible
         up_methods_found = list(up_methods_found)

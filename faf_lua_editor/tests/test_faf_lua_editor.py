@@ -6,144 +6,68 @@ class FAFLuaEditorTestCase(unittest.TestCase):
     def setUp(self):
         self.editor = FAFLuaEditor()
 
-    def tearDown(self):
-        del self.editor
-
-    def test_reformat_lots_of_stuff_at_once(self):
+    def test_upvalue_call(self):
         source = textwrap.dedent('''\
-            DRA0202 = Class(CAirUnit) {
-                Weapons = {
-                    AntiAirMissiles = Class(CAAMissileNaniteWeapon) {},
-                    GroundMissile = Class(CIFMissileCorsairWeapon) {
-                    
-                IdleState = State (CIFMissileCorsairWeapon.IdleState) {
-                Main = function(self)
-                    CIFMissileCorsairWeapon.IdleState.Main(self)
-                end,
-                            
-                OnGotTarget = function(self)
-                    if self.unit:IsUnitState('Moving') then
-                    self.unit:SetSpeedMult(1.0)
-                    else
-                    self.unit:SetBreakOffTriggerMult(2.0)
-                    self.unit:SetBreakOffDistanceMult(8.0)
-                    self.unit:SetSpeedMult(0.67)
-                    CIFMissileCorsairWeapon.IdleState.OnGotTarget(self)
-                    end
-                end,            
-                },
-                    
-                OnGotTarget = function(self)
-                    if self.unit:IsUnitState('Moving') then
-                    self.unit:SetSpeedMult(1.0)
-                    else
-                    self.unit:SetBreakOffTriggerMult(2.0)
-                    self.unit:SetBreakOffDistanceMult(8.0)
-                    self.unit:SetSpeedMult(0.67)
-                    CIFMissileCorsairWeapon.OnGotTarget(self)
-                    end
-                end,
-                    
-                OnLostTarget = function(self)
-                    self.unit:SetBreakOffTriggerMult(1.0)
-                    self.unit:SetBreakOffDistanceMult(1.0)
-                    self.unit:SetSpeedMult(1.0)
-                    CIFMissileCorsairWeapon.OnLostTarget(self)
-                end,
-                    },
-                },
-            }''')
-        exp = textwrap.dedent('''\
-            DRA0202 = Class(CAirUnit)({
-                Weapons = {
-                        AntiAirMissiles = Class(CAAMissileNaniteWeapon)({
-                        }),
-                        GroundMissile = Class(CIFMissileCorsairWeapon)({
+            self.SetBreakOffTriggerMult(1)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local UnitMethods = _G.moho.unit_methods
+            local UnitMethodsSetBreakOffTriggerMult = UnitMethods.SetBreakOffTriggerMult
+            -- End of automatically upvalued moho functions
 
-                                    IdleState = State(CIFMissileCorsairWeapon.IdleState)({
-                                                    Main = function(self)
-                                                        CIFMissileCorsairWeapon.IdleState.Main(self)
-                                                    end,
+            UnitMethodsSetBreakOffTriggerMult(1)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
 
-                                                    OnGotTarget = function(self)
-                                                        if self.unit:IsUnitState('Moving') then
-                                                            self.unit:SetSpeedMult(1.0)
-                                                        else
-                                                            self.unit:SetBreakOffTriggerMult(2.0)
-                                                            self.unit:SetBreakOffDistanceMult(8.0)
-                                                            self.unit:SetSpeedMult(0.67)
-                                                            CIFMissileCorsairWeapon.IdleState.OnGotTarget(self)
-                                                        end
-                                                    end,
-                                    }),
-
-                                    OnGotTarget = function(self)
-                                        if self.unit:IsUnitState('Moving') then
-                                            self.unit:SetSpeedMult(1.0)
-                                        else
-                                            self.unit:SetBreakOffTriggerMult(2.0)
-                                            self.unit:SetBreakOffDistanceMult(8.0)
-                                            self.unit:SetSpeedMult(0.67)
-                                            CIFMissileCorsairWeapon.OnGotTarget(self)
-                                        end
-                                    end,
-
-                                    OnLostTarget = function(self)
-                                        self.unit:SetBreakOffTriggerMult(1.0)
-                                        self.unit:SetBreakOffDistanceMult(1.0)
-                                        self.unit:SetSpeedMult(1.0)
-                                        CIFMissileCorsairWeapon.OnLostTarget(self)
-                                    end,
-                        }),
-                },
-            })''')
-        self.assertEqual(exp, self.editor._reformat(source))
-
-    def test_upvalue_lots_of_stuff_at_once(self):
+    def test_upvalue_invoke(self):
         source = textwrap.dedent('''\
-            DRA0202 = Class(CAirUnit)({
-                Weapons = {
-                        AntiAirMissiles = Class(CAAMissileNaniteWeapon)({
-                        }),
-                        GroundMissile = Class(CIFMissileCorsairWeapon)({
+            self:SetBreakOffTriggerMult(1)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local UnitMethods = _G.moho.unit_methods
+            local UnitMethodsSetBreakOffTriggerMult = UnitMethods.SetBreakOffTriggerMult
+            -- End of automatically upvalued moho functions
 
-                                    IdleState = State(CIFMissileCorsairWeapon.IdleState)({
-                                                    Main = function(self)
-                                                        CIFMissileCorsairWeapon.IdleState.Main(self)
-                                                    end,
+            UnitMethodsSetBreakOffTriggerMult(self, 1)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
 
-                                                    OnGotTarget = function(self)
-                                                        if self.unit:IsUnitState('Moving') then
-                                                            self.unit:SetSpeedMult(1.0)
-                                                        else
-                                                            self.unit:SetBreakOffTriggerMult(2.0)
-                                                            self.unit:SetBreakOffDistanceMult(8.0)
-                                                            self.unit:SetSpeedMult(0.67)
-                                                            CIFMissileCorsairWeapon.IdleState.OnGotTarget(self)
-                                                        end
-                                                    end,
-                                    }),
+    def test_upvalue_chained_invokes(self):
+        source = textwrap.dedent('''\
+            self.unit:SetBreakOffTriggerMult(3):SetBreakOffDistanceMult(4)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local UnitMethods = _G.moho.unit_methods
+            local UnitMethodsSetBreakOffDistanceMult = UnitMethods.SetBreakOffDistanceMult
+            local UnitMethodsSetBreakOffTriggerMult = UnitMethods.SetBreakOffTriggerMult
+            -- End of automatically upvalued moho functions
 
-                                    OnGotTarget = function(self)
-                                        if self.unit:IsUnitState('Moving') then
-                                            self.unit:SetSpeedMult(1.0)
-                                        else
-                                            self.unit:SetBreakOffTriggerMult(2.0)
-                                            self.unit:SetBreakOffDistanceMult(8.0)
-                                            self.unit:SetSpeedMult(0.67)
-                                            CIFMissileCorsairWeapon.OnGotTarget(self)
-                                        end
-                                    end,
+            UnitMethodsSetBreakOffTriggerMult(self.unit, 3)
+            UnitMethodsSetBreakOffDistanceMult(self.unit, 4)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
 
-                                    OnLostTarget = function(self)
-                                        self.unit:SetBreakOffTriggerMult(1.0)
-                                        self.unit:SetBreakOffDistanceMult(1.0)
-                                        self.unit:SetSpeedMult(1.0)
-                                        CIFMissileCorsairWeapon.OnLostTarget(self)
-                                    end,
-                        }),
-                },
-            })''')
+    def test_upvalue_chained_invokes_2(self):
+        source = textwrap.dedent('''\
+            self.unit:SetBreakOffTriggerMult(3):SetBreakOffDistanceMult(4):SetBreakOffTriggerMult(5)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local UnitMethods = _G.moho.unit_methods
+            local UnitMethodsSetBreakOffDistanceMult = UnitMethods.SetBreakOffDistanceMult
+            local UnitMethodsSetBreakOffTriggerMult = UnitMethods.SetBreakOffTriggerMult
+            -- End of automatically upvalued moho functions
+
+            UnitMethodsSetBreakOffTriggerMult(self.unit, 3)
+            UnitMethodsSetBreakOffDistanceMult(self.unit, 4)
+            UnitMethodsSetBreakOffTriggerMult(self.unit, 5)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
+
+    def test_upvalue_calls_and_invokes(self):
+        source = textwrap.dedent('''\
+            self.SetBreakOffTriggerMult(1)
+            self:SetBreakOffDistanceMult(2)
+            self.unit:SetSpeedMult(3)''')
         expect = textwrap.dedent('''\
             -- Automatically upvalued moho functions for performance
             local UnitMethods = _G.moho.unit_methods
@@ -152,48 +76,27 @@ class FAFLuaEditorTestCase(unittest.TestCase):
             local UnitMethodsSetSpeedMult = UnitMethods.SetSpeedMult
             -- End of automatically upvalued moho functions
 
-            DRA0202 = Class(CAirUnit)({
-                Weapons = {
-                        AntiAirMissiles = Class(CAAMissileNaniteWeapon)({
-                        }),
-                        GroundMissile = Class(CIFMissileCorsairWeapon)({
+            UnitMethodsSetBreakOffTriggerMult(1)
+            UnitMethodsSetBreakOffDistanceMult(self, 2)
+            UnitMethodsSetSpeedMult(self.unit, 3)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
 
-                                    IdleState = State(CIFMissileCorsairWeapon.IdleState)({
-                                                    Main = function(self)
-                                                        CIFMissileCorsairWeapon.IdleState.Main(self)
-                                                    end,
+    def test_upvalue_some_calls_and_chained_invokes(self):
+        source = textwrap.dedent('''\
+            self.unit:SetBreakOffTriggerMult(1)
+            self.unit:SetBreakOffDistanceMult(2)
+            self.unit:SetBreakOffTriggerMult(3):SetBreakOffDistanceMult(4)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local UnitMethods = _G.moho.unit_methods
+            local UnitMethodsSetBreakOffDistanceMult = UnitMethods.SetBreakOffDistanceMult
+            local UnitMethodsSetBreakOffTriggerMult = UnitMethods.SetBreakOffTriggerMult
+            -- End of automatically upvalued moho functions
 
-                                                    OnGotTarget = function(self)
-                                                        if self.unit:IsUnitState('Moving') then
-                                                            UnitMethodsSetSpeedMult(self.unit, 1.0)
-                                                        else
-                                                            UnitMethodsSetBreakOffTriggerMult(self.unit, 2.0)
-                                                            UnitMethodsSetBreakOffDistanceMult(self.unit, 8.0)
-                                                            UnitMethodsSetSpeedMult(self.unit, 0.67)
-                                                            CIFMissileCorsairWeapon.IdleState.OnGotTarget(self)
-                                                        end
-                                                    end,
-                                    }),
-
-                                    OnGotTarget = function(self)
-                                        if self.unit:IsUnitState('Moving') then
-                                            UnitMethodsSetSpeedMult(self.unit, 1.0)
-                                        else
-                                            UnitMethodsSetBreakOffTriggerMult(self.unit, 2.0)
-                                            UnitMethodsSetBreakOffDistanceMult(self.unit, 8.0)
-                                            UnitMethodsSetSpeedMult(self.unit, 0.67)
-                                            CIFMissileCorsairWeapon.OnGotTarget(self)
-                                        end
-                                    end,
-
-                                    OnLostTarget = function(self)
-                                        UnitMethodsSetBreakOffTriggerMult(self.unit, 1.0)
-                                        UnitMethodsSetBreakOffDistanceMult(self.unit, 1.0)
-                                        UnitMethodsSetSpeedMult(self.unit, 1.0)
-                                        CIFMissileCorsairWeapon.OnLostTarget(self)
-                                    end,
-                        }),
-                },
-            })''')
+            UnitMethodsSetBreakOffTriggerMult(self.unit, 1)
+            UnitMethodsSetBreakOffDistanceMult(self.unit, 2)
+            UnitMethodsSetBreakOffTriggerMult(self.unit, 3)
+            UnitMethodsSetBreakOffDistanceMult(self.unit, 4)''')
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)

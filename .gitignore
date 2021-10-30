@@ -3,6 +3,7 @@
 *.tokens
 build/
 dist/
+bin/files_for_quick_testing
 *.egg-info/
 .vscode/
 __pycache__/

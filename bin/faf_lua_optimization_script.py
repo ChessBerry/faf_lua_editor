@@ -1,4 +1,5 @@
 from faf_lua_editor import FAFLuaEditor
+import os
 
 if __name__ == "__main__":
     # # rootdirs = ["../FAForever_GitHub/units"]
@@ -17,8 +18,8 @@ if __name__ == "__main__":
     # filepaths = ["../FAForever_GitHub/units/DRA0202/DRA0202_Script.lua"]
     # filepaths = ["../FAForever_GitHub/units/UAB1104/UAB1104_Script.lua"]
     # filepaths = ["../FAForever_GitHub/projectiles\AIFMiasmaShell01\AIFMiasmaShell01_script.lua"]
-    filepaths = ["faf_lua_for_testing.lua"]
-    # filepaths = ["lua_for_testing.lua"]
+    # filepaths = ["bin/files_for_quick_testing/faf_lua_for_testing.lua"]
+    filepaths = ["bin/files_for_quick_testing/lua_for_testing.lua"]
 
     editor = FAFLuaEditor()
 
@@ -26,8 +27,8 @@ if __name__ == "__main__":
     for file_path in filepaths:
         try:
             print("\nOpening ", file_path)
-            editor.reformat_file(file_path)
-            # editor.upvalue_moho_functions_in_file(file_path)
+            # editor.reformat_file(file_path)
+            editor.upvalue_moho_functions_in_file(file_path)
             # print(file_path)
         except:
             failed_files.append(file_path)

@@ -82,18 +82,34 @@ class FAFLuaEditor():
         explicit_invoke_first_arg = ''
         current_method = statement.source
         if isinstance(current_method, Invoke) and statement.func.id in self._func_to_up_func:
-            # current_method = current_method.source
+            # Current Method is another invoke
             explicit_invoke_first_arg = self.create_new_statement_for_invoke_upvalue(current_method, up_funcs, new_statements)
             new_statements.append(Call(Name(up_func), [Name(explicit_invoke_first_arg)] + statement.args, statement.comments))
         else:
             while True:
-                try: 
-                    explicit_invoke_first_arg = '.'.join(filter(None,[current_method.idx.id, explicit_invoke_first_arg]))
-                    current_method = current_method.value
+                # if isinstance(current_method, Index): # Doesn't work as most things are somehow called index..
+                try:
+                    is_a_number_index = current_method.idx.display_name == 'Number'
+                    if not is_a_number_index: raise AttributeError
+                    # Current method is the index part of a table or something, e.g. something like Beams[1]
+                    try:
+                        explicit_invoke_first_arg = '.'.join(filter(None,[current_method.value.idx.id + '[' + str(current_method.idx.n) + ']', explicit_invoke_first_arg]))
+                        # As the index '[1]' and the table 'Beams' are treated as separate we need to go up two steps .value
+                        # calls here
+                        current_method = current_method.value.value
+                    except AttributeError:
+                        # Current method is the main table or otherwise indexed thing
+                        explicit_invoke_first_arg = '.'.join(filter(None,[current_method.value.id + '[' + str(current_method.idx.n) + ']', explicit_invoke_first_arg]))
+                        break
                 except AttributeError:
-                    explicit_invoke_first_arg = '.'.join(filter(None,[current_method.id, explicit_invoke_first_arg]))
-                    # current_method = statement_value.value
-                    break
+                    try:
+                        # Current method is an element of another class
+                        explicit_invoke_first_arg = '.'.join(filter(None,[current_method.idx.id, explicit_invoke_first_arg]))
+                        current_method = current_method.value
+                    except AttributeError:
+                        # Current method is the main class or function being called
+                        explicit_invoke_first_arg = '.'.join(filter(None,[current_method.id, explicit_invoke_first_arg]))
+                        break
             new_statements.append(Call(Name(up_func), [Name(explicit_invoke_first_arg)] + statement.args, statement.comments))
         
         return explicit_invoke_first_arg

@@ -214,7 +214,6 @@
     },
     "Sim.CCollisionManipulator": {
         "moho.BuilderArmManipulator": "INFO:",
-        "Enable": "INFO: Fixme: this should just use base manipulator enable/disable",
         "EnableTerrainCheck": "INFO: Make manipulator check for terrain height intersection",
         "WatchBone": "INFO: CollisionDetector:WatchBone(bone) -- add the given bone to those watched by this manipulator",
         "moho.CollisionManipulator": "INFO:"
@@ -346,7 +345,6 @@
     },
     "Sim.CollisionBeamEntity": {
         "moho.ScriptTask_Methods": "INFO:",
-        "Enable": "INFO: CollisionBeamEntity:Enable()",
         "GetLauncher": "INFO: CollisionBeamEntity:GetLauncher()",
         "IsEnabled": "INFO: bool = CollisionBeamEntity:IsEnabled()",
         "SetBeamFx": "INFO: CollisionBeamEntity:SetBeamFx(beamEmitter, checkCollision) -- set an emitter to be controlled by this beam. Its length parameter will be set from the beam entity's collision distance.",
@@ -462,8 +460,6 @@
     },
     "Sim.IAniManipulator": {
         "moho.entity_methods": "INFO:",
-        "Disable": "INFO: Manipulator:Disable() -- disable a manipulator. This immediately removes it from the bone computation, which may result in the bone's position snapping.",
-        "Enable": "INFO: Manipulator:Enable() -- enable a manipulator. Manipulators start out enabled so you only need this after calling Disable().",
         "SetPrecedence": "INFO: Manipulator:SetPrecedence(integer) -- change the precedence of this manipulator. Manipulators with higher precedence run first.",
         "moho.manipulator_methods": "INFO:"
     },

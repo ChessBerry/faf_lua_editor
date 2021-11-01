@@ -195,3 +195,56 @@ class FAFLuaEditorTestCase(unittest.TestCase):
             IEffectMethodsScaleEmitter(somefunc(foo, bar, 1, 1.2), 1.5)''')
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)
+
+    def test_upvalue_of_invoke_after_call_2(self):
+        source = textwrap.dedent('''\
+            someFunc(someTable[i]):ScaleEmitter(thingy)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local IEffectMethods = _G.moho.IEffect
+            local IEffectMethodsScaleEmitter = IEffectMethods.ScaleEmitter
+            -- End of automatically upvalued moho functions
+
+            IEffectMethodsScaleEmitter(someFunc(someTable[i]), thingy)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
+
+    def test_upvalue_of_invoke_after_call_3(self):
+        source = textwrap.dedent('''\
+            someFunc(foo.someTable[i]):ScaleEmitter(thingy)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local IEffectMethods = _G.moho.IEffect
+            local IEffectMethodsScaleEmitter = IEffectMethods.ScaleEmitter
+            -- End of automatically upvalued moho functions
+
+            IEffectMethodsScaleEmitter(someFunc(someTable[i]), thingy)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
+
+    def test_upvalue_of_invoke_after_call_4(self):
+        source = textwrap.dedent('''\
+            someFunc(a.b):ScaleEmitter(thingy)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local IEffectMethods = _G.moho.IEffect
+            local IEffectMethodsScaleEmitter = IEffectMethods.ScaleEmitter
+            -- End of automatically upvalued moho functions
+
+            IEffectMethodsScaleEmitter(someFunc(a.b), thingy)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
+
+    # def test_chained_upvalue_invoke_after_call_with_string_arg(self):
+    #     source = textwrap.dedent('''\
+    #         self:GetWeaponByLabel('DummyWeapon'):ChangeMaxRadius(self.normalRange or 22)''')
+    #     expect = textwrap.dedent('''\
+    #         -- Automatically upvalued moho functions for performance
+    #         local UnitWeaponMethods = _G.moho.weapon_methods
+    #         local UnitWeaponMethodsChangeMaxRadius = UnitWeaponMethods.ChangeMaxRadius
+    #         -- End of automatically upvalued moho functions
+
+    #         self:GetWeaponByLabel('DummyWeapon')
+    #         UnitWeaponMethodsChangeMaxRadius(self, self.normalRange or 22)''')
+    #     result = self.editor._upvalue_moho_functions(source)
+    #     self.assertEqual(expect, result)

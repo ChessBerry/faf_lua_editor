@@ -96,12 +96,14 @@ class FAFLuaEditor():
                     # Current method is the index part of a table or something, e.g. something like Beams[1]
                     try:
                         explicit_invoke_first_arg = '.'.join(filter(None,[current_method.value.idx.id + '[' + str(current_method.idx.n) + ']', explicit_invoke_first_arg]))
+                        # NOTE: This will fail if the index is not a number! Rewriting this is needed anyway though
                         # As the index '[1]' and the table 'Beams' are treated as separate we need to go up two steps .value
                         # calls here
                         current_method = current_method.value.value
                     except AttributeError:
                         # Current method is the main table or otherwise indexed thing
                         explicit_invoke_first_arg = '.'.join(filter(None,[current_method.value.id + '[' + str(current_method.idx.n) + ']', explicit_invoke_first_arg]))
+                        # NOTE: This will fail if the index is not a number! Rewriting this is needed anyway though
                         break
                 except AttributeError:
                     try:
@@ -119,12 +121,40 @@ class FAFLuaEditor():
                             for arg in current_method.args:
                                 try:
                                     func_args.append(arg.id) # variable
+                                    # break
                                 except AttributeError:
                                     try:
                                         func_args.append(str(arg.n)) # number
+                                        # break
                                     except AttributeError:
-                                        func_args.append(arg.s) # string
-                            # meh = current_method.func.id + '(' + ', '.join(current_method.args) + ')'
+                                        try:
+                                            func_args.append(arg.s) # string
+                                            # break
+                                        except AttributeError:
+                                            if arg.notation.name == 'SQUARE': 
+                                                index_notation_left = '['
+                                                index_notation_right = ']'
+                                            else:
+                                                index_notation_left = '.'
+                                                index_notation_right = ''      
+                                            try:
+                                                # table being indexed with a variable
+                                                # NOTE: Fails for more than one index (if that is possible?)
+                                                try:
+                                                    func_args.append(arg.value.idx.id + index_notation_left + str(arg.idx.id) + index_notation_right)
+                                                    # current_method = current_method.value
+                                                except AttributeError:
+                                                    func_args.append(arg.value.id + index_notation_left + str(arg.idx.id) + index_notation_right)
+                                                    # break
+                                            except AttributeError:
+                                                # table being indexed with a number
+                                                # NOTE: Fails for more than one index (if that is possible?)
+                                                try:
+                                                    func_args.append(arg.value.idx.id + index_notation_left + str(arg.idx.n) + index_notation_right)
+                                                    # current_method = current_method.value
+                                                except AttributeError:
+                                                    func_args.append(arg.value.id + index_notation_left + str(arg.idx.n) + index_notation_right)
+                                                    # break
                             explicit_invoke_first_arg = '.'.join(filter(None,[current_method.func.id + '(' + ', '.join(func_args) + ')', explicit_invoke_first_arg]))
                             break
         func = statement.func.id

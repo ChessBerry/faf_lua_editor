@@ -74,9 +74,7 @@ class FAFLuaEditor():
             return ast.to_lua_source(chunk)
 
     def create_new_statement_for_invoke_upvalue(self, statement, up_funcs: List, new_statements:List):
-        up_func = self._func_to_up_func[statement.func.id]
-        up_funcs.append(up_func)
-
+        
         # go through all the method calls that came before the final function call so that we can add them 
         # as the explicit first argument of the function, which is what the colon invoke does implicitly
         explicit_invoke_first_arg = ''
@@ -84,7 +82,10 @@ class FAFLuaEditor():
         if isinstance(current_method, Invoke) and statement.func.id in self._func_to_up_func:
             # Current Method is another invoke
             explicit_invoke_first_arg = self.create_new_statement_for_invoke_upvalue(current_method, up_funcs, new_statements)
-            new_statements.append(Call(Name(up_func), [Name(explicit_invoke_first_arg)] + statement.args, statement.comments))
+            # if func in self._func_to_up_func:
+            #     new_statements.append(Call(Name(up_func), [Name(explicit_invoke_first_arg)] + statement.args, statement.comments))
+            # else:
+            #     new_statements.append(statement)
         else:
             while True:
                 # if isinstance(current_method, Index): # Doesn't work as most things are somehow called index..
@@ -110,7 +111,13 @@ class FAFLuaEditor():
                         # Current method is the main class or function being called
                         explicit_invoke_first_arg = '.'.join(filter(None,[current_method.id, explicit_invoke_first_arg]))
                         break
+        func = statement.func.id
+        if func in self._func_to_up_func:
+            up_func = self._func_to_up_func[func]
+            up_funcs.append(up_func)
             new_statements.append(Call(Name(up_func), [Name(explicit_invoke_first_arg)] + statement.args, statement.comments))
+        else:
+            new_statements.append(statement)
         
         return explicit_invoke_first_arg
 

@@ -19,7 +19,10 @@ if __name__ == "__main__":
     # filepaths = ["../FAForever_GitHub/units/UAB1104/UAB1104_Script.lua"]
     # filepaths = ["../FAForever_GitHub/projectiles\AIFMiasmaShell01\AIFMiasmaShell01_script.lua"]
     # filepaths = ["bin/files_for_quick_testing/faf_lua_for_testing.lua"]
-    filepaths = ["bin/files_for_quick_testing/lua_for_testing.lua"]
+    # filepaths = ["bin/files_for_quick_testing/lua_for_testing.lua"]
+
+    # the last stubborn ones
+    filepaths = ['../FAForever_GitHub/units\\URL0402\\URL0402_script.lua', '../FAForever_GitHub/units\\XRL0403\\XRL0403_script.lua', '../FAForever_GitHub/projectiles\\SANHeavyCavitationTorpedo01\\SANHeavyCavitationTorpedo01_script.lua', '../FAForever_GitHub/projectiles\\SANHeavyCavitationTorpedo02\\SANHeavyCavitationTorpedo02_script.lua']
 
     editor = FAFLuaEditor()
 

@@ -763,8 +763,6 @@
         "ChangeDamageType": "INFO: UnitWeapon:ChangeDamageType(typeName)",
         "ChangeFiringTolerance": "INFO: UnitWeapon:ChangeFiringTolerance(value)",
         "ChangeMaxHeightDiff": "INFO: UnitWeapon:ChangeMaxHeightDiff(value)",
-        "ChangeMaxRadius": "INFO: UnitWeapon:ChangeMaxRadius(value)",
-        "ChangeMinRadius": "INFO: UnitWeapon:ChangeMinRadius(value)",
         "ChangeProjectileBlueprint": "INFO: Change the projectile blueprint of a weapon",
         "ChangeRateOfFire": "INFO: UnitWeapon:ChangeRateOfFire(value)",
         "CreateProjectile": "INFO: UnitWeapon:CreateProjectile(muzzlebone)",

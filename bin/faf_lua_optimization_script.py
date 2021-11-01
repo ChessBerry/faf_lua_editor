@@ -2,18 +2,18 @@ from faf_lua_editor import FAFLuaEditor
 import os
 
 if __name__ == "__main__":
-    # # rootdirs = ["../FAForever_GitHub/units"]
-    # # rootdirs = ["../FAForever_GitHub/projectiles"]
-    # rootdirs = ["../FAForever_GitHub/units", "../FAForever_GitHub/projectiles"]
-    # filepaths = []
-    # for rootdir in rootdirs:
-    #     for subdir, dirs, files in os.walk(rootdir):
-    #         # print(files)
-    #         for file in files:
-    #             if file.endswith(".lua"):
-    #                 file_path = os.path.join(subdir, file)
-    #                 filepaths.append(file_path)
-    #                 # print(file_path)
+    # rootdirs = ["../FAForever_GitHub/units"]
+    # rootdirs = ["../FAForever_GitHub/projectiles"]
+    rootdirs = ["../FAForever_GitHub/units", "../FAForever_GitHub/projectiles"]
+    filepaths = []
+    for rootdir in rootdirs:
+        for subdir, dirs, files in os.walk(rootdir):
+            # print(files)
+            for file in files:
+                if file.endswith(".lua"):
+                    file_path = os.path.join(subdir, file)
+                    filepaths.append(file_path)
+                    # print(file_path)
 
     # filepaths = ["../FAForever_GitHub/units/DRA0202/DRA0202_Script.lua"]
     # filepaths = ["../FAForever_GitHub/units/UAB1104/UAB1104_Script.lua"]
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # filepaths = ["bin/files_for_quick_testing/lua_for_testing.lua"]
 
     # the last stubborn ones
-    filepaths = ['../FAForever_GitHub/projectiles\\SANHeavyCavitationTorpedo01\\SANHeavyCavitationTorpedo01_script.lua', '../FAForever_GitHub/projectiles\\SANHeavyCavitationTorpedo02\\SANHeavyCavitationTorpedo02_script.lua']
+    # filepaths = ['../FAForever_GitHub/projectiles\\SANHeavyCavitationTorpedo01\\SANHeavyCavitationTorpedo01_script.lua', '../FAForever_GitHub/projectiles\\SANHeavyCavitationTorpedo02\\SANHeavyCavitationTorpedo02_script.lua']
     
     editor = FAFLuaEditor()
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     if failed_files:
         print("\nfailed and hence skipped files:\n", failed_files)
     else:
-        print("Editing/Optimizing worked for ALL files!")
+        print("\nEditing/Optimizing worked for ALL files!")
     # print("it worked!")
 
 # ---------

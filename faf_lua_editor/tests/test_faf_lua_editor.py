@@ -171,15 +171,15 @@ class FAFLuaEditorTestCase(unittest.TestCase):
 
     def test_upvalue_of_chained_upvaluable_and_not_upvaluable_function(self):
         source = textwrap.dedent('''\
-            self:thisIsNotAMohoInvoke(some_args):ChangeMaxRadius(self.normalRange)''')
+            self:thisIsNotAMohoInvoke(some_args):SetAmbientSound(self.normalRange)''')
         expect = textwrap.dedent('''\
             -- Automatically upvalued moho functions for performance
-            local UnitWeaponMethods = _G.moho.weapon_methods
-            local UnitWeaponMethodsChangeMaxRadius = UnitWeaponMethods.ChangeMaxRadius
+            local EntityMethods = _G.moho.entity_methods
+            local EntityMethodsSetAmbientSound = EntityMethods.SetAmbientSound
             -- End of automatically upvalued moho functions
 
             self:thisIsNotAMohoInvoke(some_args)
-            UnitWeaponMethodsChangeMaxRadius(self, self.normalRange)''')
+            EntityMethodsSetAmbientSound(self, self.normalRange)''')
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)
 

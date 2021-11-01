@@ -183,3 +183,15 @@ class FAFLuaEditorTestCase(unittest.TestCase):
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)
 
+    def test_upvalue_of_invoke_after_call(self):
+        source = textwrap.dedent('''\
+            somefunc(foo, "bar", 1, 1.2):ScaleEmitter(1.5)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local IEffectMethods = _G.moho.IEffect
+            local IEffectMethodsScaleEmitter = IEffectMethods.ScaleEmitter
+            -- End of automatically upvalued moho functions
+
+            IEffectMethodsScaleEmitter(somefunc(foo, bar, 1, 1.2), 1.5)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)

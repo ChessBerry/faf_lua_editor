@@ -82,13 +82,14 @@ class FAFLuaEditor():
         if isinstance(current_method, Invoke) and statement.func.id in self._func_to_up_func:
             # Current Method is another invoke
             explicit_invoke_first_arg = self.create_new_statement_for_invoke_upvalue(current_method, up_funcs, new_statements)
-            # if func in self._func_to_up_func:
-            #     new_statements.append(Call(Name(up_func), [Name(explicit_invoke_first_arg)] + statement.args, statement.comments))
-            # else:
-            #     new_statements.append(statement)
         else:
+            # this try except stuff is needed because there is no consistent way to get the string 
+            # representation from a node. I should add this, it would reduce this entire function 
+            # to like 10 lines, with comments.
+            # Also the stuff below doesn't generalize to an arbitrary recursion level, even though it should and 
+            # implementing that would be trivial with an easy way to get the right string from a node
             while True:
-                # if isinstance(current_method, Index): # Doesn't work as most things are somehow called index..
+                # if isinstance(current_method, Index): # Doesn't work as most things are somehow called "index"..
                 try:
                     is_a_number_index = current_method.idx.display_name == 'Number'
                     if not is_a_number_index: raise AttributeError
@@ -108,15 +109,31 @@ class FAFLuaEditor():
                         explicit_invoke_first_arg = '.'.join(filter(None,[current_method.idx.id, explicit_invoke_first_arg]))
                         current_method = current_method.value
                     except AttributeError:
-                        # Current method is the main class or function being called
-                        explicit_invoke_first_arg = '.'.join(filter(None,[current_method.id, explicit_invoke_first_arg]))
-                        break
+                        try:
+                            # Current method is the main class or function being called
+                            explicit_invoke_first_arg = '.'.join(filter(None,[current_method.id, explicit_invoke_first_arg]))
+                            break
+                        except AttributeError:
+                            # Current Method is an invoke straight after a function call
+                            func_args = []
+                            for arg in current_method.args:
+                                try:
+                                    func_args.append(arg.id) # variable
+                                except AttributeError:
+                                    try:
+                                        func_args.append(str(arg.n)) # number
+                                    except AttributeError:
+                                        func_args.append(arg.s) # string
+                            # meh = current_method.func.id + '(' + ', '.join(current_method.args) + ')'
+                            explicit_invoke_first_arg = '.'.join(filter(None,[current_method.func.id + '(' + ', '.join(func_args) + ')', explicit_invoke_first_arg]))
+                            break
         func = statement.func.id
         if func in self._func_to_up_func:
             up_func = self._func_to_up_func[func]
             up_funcs.append(up_func)
             new_statements.append(Call(Name(up_func), [Name(explicit_invoke_first_arg)] + statement.args, statement.comments))
         else:
+            # If the func can't be upvalued, don't change the statement at all
             new_statements.append(statement)
         
         return explicit_invoke_first_arg

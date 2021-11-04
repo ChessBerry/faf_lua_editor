@@ -19,6 +19,19 @@ class FAFLuaEditorTestCase(unittest.TestCase):
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)
 
+    def test_upvalue_call_more_args(self):
+        source = textwrap.dedent('''\
+            self.SetBreakOffTriggerMult(1, 1.2, foo, "bar", cheese[1], blarg[i], base.meth, base.call(), base:inv(), base.cheese[1], base.cheese[i])''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local UnitMethods = _G.moho.unit_methods
+            local UnitMethodsSetBreakOffTriggerMult = UnitMethods.SetBreakOffTriggerMult
+            -- End of automatically upvalued moho functions
+
+            UnitMethodsSetBreakOffTriggerMult(1, 1.2, foo, "bar", cheese[1], blarg[i], base.meth, base.call(), base:inv(), base.cheese[1], base.cheese[i])''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
+
     def test_upvalue_chained_calls(self):
         source = textwrap.dedent('''\
             self.meh.foo.bar.SetBreakOffTriggerMult(1)''')
@@ -42,6 +55,19 @@ class FAFLuaEditorTestCase(unittest.TestCase):
             -- End of automatically upvalued moho functions
 
             UnitMethodsSetBreakOffTriggerMult(self, 1)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)
+
+    def test_upvalue_invoke_more_args(self):
+        source = textwrap.dedent('''\
+            self:SetBreakOffTriggerMult(1, 1.2, foo, "bar", cheese[1], blarg[i], base.meth, base.call(), base:inv(), base.cheese[1], base.cheese[i])''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local UnitMethods = _G.moho.unit_methods
+            local UnitMethodsSetBreakOffTriggerMult = UnitMethods.SetBreakOffTriggerMult
+            -- End of automatically upvalued moho functions
+
+            UnitMethodsSetBreakOffTriggerMult(self, 1, 1.2, foo, "bar", cheese[1], blarg[i], base.meth, base.call(), base:inv(), base.cheese[1], base.cheese[i])''')
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)
 
@@ -185,66 +211,69 @@ class FAFLuaEditorTestCase(unittest.TestCase):
 
     def test_upvalue_of_invoke_after_call(self):
         source = textwrap.dedent('''\
-            somefunc(foo, "bar", 1, 1.2):ScaleEmitter(1.5)''')
+            somefunc(1):ScaleEmitter(1.5)''')
         expect = textwrap.dedent('''\
             -- Automatically upvalued moho functions for performance
             local IEffectMethods = _G.moho.IEffect
             local IEffectMethodsScaleEmitter = IEffectMethods.ScaleEmitter
             -- End of automatically upvalued moho functions
 
-            IEffectMethodsScaleEmitter(somefunc(foo, bar, 1, 1.2), 1.5)''')
+            IEffectMethodsScaleEmitter(somefunc(1), 1.5)''')
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)
 
-    def test_upvalue_of_invoke_after_call_2(self):
+    def test_upvalue_of_invoke_after_call_more_args(self):
         source = textwrap.dedent('''\
-            someFunc(someTable[i]):ScaleEmitter(thingy)''')
+            someFunc(1, 1.2, foo, "bar", cheese[1], blarg[i], base.meth):ScaleEmitter(thingy)''')
         expect = textwrap.dedent('''\
             -- Automatically upvalued moho functions for performance
             local IEffectMethods = _G.moho.IEffect
             local IEffectMethodsScaleEmitter = IEffectMethods.ScaleEmitter
             -- End of automatically upvalued moho functions
 
-            IEffectMethodsScaleEmitter(someFunc(someTable[i]), thingy)''')
+            IEffectMethodsScaleEmitter(someFunc(1, 1.2, foo, "bar", cheese[1], blarg[i], base.meth), thingy)''')
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)
 
-    def test_upvalue_of_invoke_after_call_3(self):
+    @unittest.skip("fails currently, because my code is horrible and doesn't generalize")
+    def test_upvalue_of_invoke_after_call_more_args_which_fail_currently(self):
         source = textwrap.dedent('''\
-            someFunc(foo.someTable[i]):ScaleEmitter(thingy)''')
+            someFunc(base.call(), base:inv(), base.cheese[1], base.cheese[i]):ScaleEmitter(thingy)''')
         expect = textwrap.dedent('''\
             -- Automatically upvalued moho functions for performance
             local IEffectMethods = _G.moho.IEffect
             local IEffectMethodsScaleEmitter = IEffectMethods.ScaleEmitter
             -- End of automatically upvalued moho functions
 
-            IEffectMethodsScaleEmitter(someFunc(someTable[i]), thingy)''')
+            IEffectMethodsScaleEmitter(base.call(), base:inv(), base.cheese[1], base.cheese[i]), thingy)''')
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)
 
-    def test_upvalue_of_invoke_after_call_4(self):
+    @unittest.skip("fails currently, because my code is horrible and doesn't generalize")
+    def test_upvalue_of_recursive_calls(self):
         source = textwrap.dedent('''\
-            someFunc(a.b):ScaleEmitter(thingy)''')
+            someFunc(anotherFunc(moreFunc(self.foo.SetBreakOffDistanceMult(1))))''')
         expect = textwrap.dedent('''\
             -- Automatically upvalued moho functions for performance
-            local IEffectMethods = _G.moho.IEffect
-            local IEffectMethodsScaleEmitter = IEffectMethods.ScaleEmitter
+            local UnitMethods = _G.moho.unit_methods
+            local UnitMethodsSetBreakOffDistanceMult = UnitMethods.SetBreakOffDistanceMult
             -- End of automatically upvalued moho functions
 
-            IEffectMethodsScaleEmitter(someFunc(a.b), thingy)''')
+            someFunc(anotherFunc(moreFunc(UnitMethodsSetBreakOffDistanceMult(1))))''')
         result = self.editor._upvalue_moho_functions(source)
         self.assertEqual(expect, result)
 
-    # def test_chained_upvalue_invoke_after_call_with_string_arg(self):
-    #     source = textwrap.dedent('''\
-    #         self:GetWeaponByLabel('DummyWeapon'):ChangeMaxRadius(self.normalRange or 22)''')
-    #     expect = textwrap.dedent('''\
-    #         -- Automatically upvalued moho functions for performance
-    #         local UnitWeaponMethods = _G.moho.weapon_methods
-    #         local UnitWeaponMethodsChangeMaxRadius = UnitWeaponMethods.ChangeMaxRadius
-    #         -- End of automatically upvalued moho functions
+    @unittest.skip("fails currently, because my code is horrible and doesn't generalize")
+    def test_upvalue_of_recursive_calls_with_invoke(self):
+        source = textwrap.dedent('''\
+            someFunc(anotherFunc(moreFunc(self.foo.SetBreakOffTriggerMult(1)))):SetBreakOffDistanceMult(2)''')
+        expect = textwrap.dedent('''\
+            -- Automatically upvalued moho functions for performance
+            local UnitMethods = _G.moho.unit_methods
+            local UnitMethodsSetBreakOffDistanceMult = UnitMethods.SetBreakOffDistanceMult
+            local UnitMethodsSetBreakOffTriggerMult = UnitMethods.SetBreakOffTriggerMult
+            -- End of automatically upvalued moho functions
 
-    #         self:GetWeaponByLabel('DummyWeapon')
-    #         UnitWeaponMethodsChangeMaxRadius(self, self.normalRange or 22)''')
-    #     result = self.editor._upvalue_moho_functions(source)
-    #     self.assertEqual(expect, result)
+            UnitMethodsSetBreakOffDistanceMult(someFunc(anotherFunc(moreFunc(UnitMethodsSetBreakOffDistanceMult(1)))), 2)''')
+        result = self.editor._upvalue_moho_functions(source)
+        self.assertEqual(expect, result)

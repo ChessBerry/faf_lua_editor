@@ -128,7 +128,7 @@ class FAFLuaEditor():
                                         # break
                                     except AttributeError:
                                         try:
-                                            func_args.append(arg.s) # string
+                                            func_args.append('\"' + arg.s + '\"') # string
                                             # break
                                         except AttributeError:
                                             if arg.notation.name == 'SQUARE': 

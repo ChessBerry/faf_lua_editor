@@ -26,6 +26,21 @@ if __name__ == "__main__":
     
     editor = FAFLuaEditor()
 
+    print(len(filepaths))
+
+    # # filepaths = filepaths[:100]
+    # # filepaths = filepaths[100:200]
+    # # filepaths = filepaths[100:150]
+    # # filepaths = filepaths[100:125]
+    # # filepaths = filepaths[125:138]
+    # # filepaths = filepaths[138:144]
+    # # filepaths = filepaths[141:144]
+    # # filepaths = filepaths[143:144]
+    # # filepaths = filepaths[141:142]
+    # filepaths = filepaths[142:143] # megalith
+
+    print(len(filepaths))
+
     failed_files = []
     for file_path in filepaths:
         try:

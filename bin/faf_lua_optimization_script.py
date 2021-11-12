@@ -28,16 +28,16 @@ if __name__ == "__main__":
 
     print(len(filepaths))
 
-    # # filepaths = filepaths[:100]
-    # # filepaths = filepaths[100:200]
-    # # filepaths = filepaths[100:150]
-    # # filepaths = filepaths[100:125]
-    # # filepaths = filepaths[125:138]
-    # # filepaths = filepaths[138:144]
-    # # filepaths = filepaths[141:144]
-    # # filepaths = filepaths[143:144]
-    # # filepaths = filepaths[141:142]
     # filepaths = filepaths[142:143] # megalith
+
+    # filepaths = filepaths[0:150]
+    # filepaths = filepaths[150:225]
+    # filepaths = filepaths[225:267]
+    # filepaths = filepaths[225:246]
+    # filepaths = filepaths[246:255]
+    # filepaths = filepaths[246:250]
+    # filepaths = filepaths[250:253]
+    filepaths = filepaths[252:253]
 
     print(len(filepaths))
 

@@ -700,7 +700,6 @@
         "SetCollideEntity": "INFO: Projectile:SetCollideEntity(onoff)",
         "SetCollideFriendly": "INFO: Projectile:SetCollideFriendly(truefalse)",
         "SetCollideSurface": "INFO: Projectile:SetCollideSurface(onoff)",
-        "SetCollision": "INFO: Projectile:SetCollision(onoff)",
         "SetDamage": "INFO: Projectile:SetDamage(amount, radius) -- change how much damage this projectile will do. Either amount or radius can be nil to leave unchanged.",
         "SetDestroyOnWater": "INFO: Projectile:SetDestroyOnWater(flag)",
         "SetLifetime": "INFO: Projectile:SetLifetime(seconds)",

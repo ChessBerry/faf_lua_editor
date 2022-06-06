@@ -26,8 +26,6 @@ if __name__ == "__main__":
     
     editor = FAFLuaEditor()
 
-    print(len(filepaths))
-
     # filepaths = filepaths[142:143] # megalith
 
     # filepaths = filepaths[0:150]
@@ -37,9 +35,23 @@ if __name__ == "__main__":
     # filepaths = filepaths[246:255]
     # filepaths = filepaths[246:250]
     # filepaths = filepaths[250:253]
-    filepaths = filepaths[252:253]
+    # filepaths = filepaths[252:253] #  Ohwalli-Strategic Bomb script SBOOhwalliStategicBomb01_script.lua
 
-    print(len(filepaths))
+    # filepaths = filepaths[250:260]
+    # filepaths = filepaths[250:255]
+    # filepaths = filepaths[255:258]
+    # filepaths = filepaths[255:257]
+    # filepaths = filepaths[255:256] # Zhanasee Bomb script SBOZhanaseeBomb01_script.lua
+
+    # remove SBOZhanaseeBomb01_script.lua from the filpaths, as I don't understand the tripple colon syntax
+    for i in range(len(filepaths)):
+        path = filepaths[i]
+        if 'SBOZhanaseeBomb01_script.lua' in path: 
+            filepaths.pop(i)
+            break
+
+    nr_files_to_edit = len(filepaths)
+    print(nr_files_to_edit)
 
     failed_files = []
     for file_path in filepaths:
@@ -55,7 +67,7 @@ if __name__ == "__main__":
     if failed_files:
         print("\nfailed and hence skipped files:\n", failed_files)
     else:
-        print("\nEditing/Optimizing worked for ALL files!")
+        print("\nEditing/Optimizing worked for ALL %d files!"%nr_files_to_edit)
     # print("it worked!")
 
 # ---------
